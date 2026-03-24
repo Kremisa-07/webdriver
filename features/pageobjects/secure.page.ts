@@ -8,8 +8,20 @@ class SecurePage extends Page {
     /**
      * define selectors using getter methods
      */
-    public get flashAlert () {
+    public get inventoryContainer () {
         return $('#flash');
+    }
+
+    public get burgerMenu () {
+        return $('#react-burger-menu-btn');
+    }
+
+    public get logoutLink () {
+        return $('#logout_sidebar_link');
+    }
+
+    public get flashAlert () {
+        return $('.inventory_list');
     }
 }
 
