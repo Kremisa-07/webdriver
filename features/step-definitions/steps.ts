@@ -48,25 +48,77 @@ When('I finish the order', async () => {
     await CheckoutPage.finishOrder();
 });
 
-Then(/^I should see a flash message saying (.*)$/, async (message) => {
-    // Special-case the Products title which is displayed in a separate .title element
-    if (message.trim() === 'Products') {
-        const titleEl = await InventoryPage.title;
-        await expectWDIO(titleEl).toBeExisting();
-        const text = await titleEl.getText();
-        if (!text.includes(message)) {
-            throw new Error(`Expected inventory title to contain '${message}' but got '${text}'`);
+When('I logout', async () => {
+    const menuBtn = await $('#react-burger-menu-btn');
+    await menuBtn.waitForClickable();
+    await menuBtn.click();
+    const logoutLink = await $('#logout_sidebar_link');
+    await logoutLink.waitForClickable();
+    await logoutLink.click();
+});
+
+Then('I should be on the login page', async () => {
+    // Check that login button exists and URL is the base login page
+    const loginBtn = await $('#login-button');
+    await expectWDIO(loginBtn).toBeExisting();
+    const url = await browser.getUrl();
+    if (!url.includes('saucedemo.com') || url.includes('/inventory.html')) {
+        throw new Error(`Expected to be on login page, current url: ${url}`);
+    }
+});
+
+// helper: check message in several places
+async function checkFlashMessage(normalized: string) {
+    const titleSel = await $('.title');
+    const containerSel = await $('#inventory_container');
+    const loginErrorSel = await LoginPage.errorMessage;
+    const bodySel = await $('body');
+
+    await browser.waitUntil(async () => {
+        try {
+            if (await titleSel.isExisting()) return true;
+            if (await containerSel.isExisting()) return true;
+            if (await loginErrorSel.isExisting()) return true;
+            const bodyText = await bodySel.getText();
+            if (bodyText && bodyText.includes(normalized)) return true;
+            return false;
+        } catch (e) {
+            return false;
         }
-        return;
+    }, { timeout: 5000, timeoutMsg: `Timed out waiting for page elements or body to contain '${normalized}'` });
+
+    if (await loginErrorSel.isExisting()) {
+        const errText = await loginErrorSel.getText();
+        if (errText.includes(normalized)) return;
+        throw new Error(`Expected login error to contain '${normalized}' but got '${errText}'`);
     }
 
-    // fallback: check inventory container text (or other messages shown there)
-    const container = await InventoryPage.inventoryContainer;
-    await expectWDIO(container).toBeExisting();
-    const text = await container.getText();
-    if (!text.includes(message)) {
-        throw new Error(`Expected inventory container to contain '${message}' but got '${text}'`);
+    if (await titleSel.isExisting()) {
+        const text = await titleSel.getText();
+        if (text.includes(normalized)) return;
     }
+
+    if (await containerSel.isExisting()) {
+        const text = await containerSel.getText();
+        if (text.includes(normalized)) return;
+    }
+
+    const bodyTextFinal = await bodySel.getText();
+    if (bodyTextFinal && bodyTextFinal.includes(normalized)) return;
+
+    throw new Error(`Could not find message '${normalized}' in login error, title, inventory container or page body.`);
+}
+
+// keep existing {string} step and call helper
+Then('I should see a flash message saying {string}', async (message: string) => {
+    const normalized = message.trim();
+    await checkFlashMessage(normalized);
+});
+
+// support unquoted text (Scenario Outline replacement may produce unquoted tokens)
+Then(/^I should see a flash message saying (.*)$/, async (raw: string) => {
+    const normalized = raw.replace(/^['"\s]+|['"\s]+$/g, '');
+    await checkFlashMessage(normalized);
 });
 
 Then('I should be on the inventory page', async () => {

@@ -12,6 +12,7 @@
     "expect-webdriverio": "^5.6.4"
   },
   "scripts": {
-    "wdio": "wdio run ./wdio.conf.ts"
+    "wdio": "wdio run ./wdio.conf.ts",
+    "report:html": "node ./scripts/generate-report.js"
   }
 }

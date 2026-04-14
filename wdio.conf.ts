@@ -155,7 +155,6 @@ export const config: WebdriverIO.Config = {
         ignoreUndefinedDefinitions: false
     },
 
-
     //
     // =====
     // Hooks

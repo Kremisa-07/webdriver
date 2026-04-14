@@ -1,4 +1,4 @@
-import { $ } from '@wdio/globals'
+import { $, browser } from '@wdio/globals'
 import Page from './page.js';
 
 /**
@@ -32,7 +32,15 @@ class LoginPage extends Page {
         await this.inputUsername.setValue(username);
         await this.inputPassword.setValue(password);
         await this.btnSubmit.click();
-        await this.errorMessage.waitForExist({ reverse: true });
+
+        // wait until either the inventory container appears (successful login)
+        // or an error message appears (failed login). This avoids hanging if
+        // the page doesn't remove the error container as expected.
+        await browser.waitUntil(async () => {
+            const inventoryExists = await $('#inventory_container').isExisting();
+            const errorExists = await this.errorMessage.isExisting();
+            return inventoryExists || errorExists;
+        }, { timeout: 5000, timeoutMsg: 'Timed out waiting for login result (inventory or error)'});
     }
 
     /**

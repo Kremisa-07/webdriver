@@ -17,3 +17,10 @@ Feature: Saucedemo login
       | some_user                 | some_sauce     | Epic sadface: Username and password do not match any user in this service |
       |                           | secret_sauce   | Epic sadface: Username is required |
       | visual_user               |                | Epic sadface: Password is required |
+
+  Scenario: Login and logout (simple)
+    Given I open the login page
+    When I login with "standard_user" and "secret_sauce"
+    Then I should see a flash message saying "Products"
+    When I logout
+    Then I should be on the login page
