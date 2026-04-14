@@ -14,3 +14,4 @@ Feature: Saucedemo login
       | performance_glitch_user   | secret_sauce   | Products |
       | error_user                | secret_sauce   | Products |
       | visual_user               | secret_sauce   | Products |
+
