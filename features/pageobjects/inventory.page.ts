@@ -8,6 +8,10 @@ class InventoryPage extends Page {
     public get inventoryContainer () {
         return $('#inventory_container');
     }
+
+    public get title() {
+        return $('.title');
+    }
 }
 
 export default new InventoryPage();

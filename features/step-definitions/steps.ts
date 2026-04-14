@@ -1,9 +1,10 @@
 import { Given, When, Then } from '@wdio/cucumber-framework';
-import { expect as expectWDIO } from '@wdio/globals'
+import { expect as expectWDIO, browser, $ } from '@wdio/globals'
 
 import LoginPage from '../pageobjects/login.page.js';
 import InventoryPage from '../pageobjects/inventory.page.js';
 import CartPage from '../pageobjects/cart.page.js';
+import CheckoutPage from '../pageobjects/checkout.page.js';
 
 Given('I open the login page', async () => {
     await LoginPage.open();
@@ -29,7 +30,37 @@ When('I add the first product to the cart', async () => {
     await btn.click();
 });
 
+When('I open the cart', async () => {
+    const cartLink = await $('.shopping_cart_link');
+    await cartLink.waitForClickable();
+    await cartLink.click();
+});
+
+When('I proceed to checkout and fill details with {string} {string} {string}', async (firstName: string, lastName: string, postalCode: string) => {
+    // On cart page there's a checkout button with id #checkout
+    const checkoutBtn = await $('#checkout');
+    await checkoutBtn.waitForClickable();
+    await checkoutBtn.click();
+    await CheckoutPage.fillCheckoutInfo(firstName, lastName, postalCode);
+});
+
+When('I finish the order', async () => {
+    await CheckoutPage.finishOrder();
+});
+
 Then(/^I should see a flash message saying (.*)$/, async (message) => {
+    // Special-case the Products title which is displayed in a separate .title element
+    if (message.trim() === 'Products') {
+        const titleEl = await InventoryPage.title;
+        await expectWDIO(titleEl).toBeExisting();
+        const text = await titleEl.getText();
+        if (!text.includes(message)) {
+            throw new Error(`Expected inventory title to contain '${message}' but got '${text}'`);
+        }
+        return;
+    }
+
+    // fallback: check inventory container text (or other messages shown there)
     const container = await InventoryPage.inventoryContainer;
     await expectWDIO(container).toBeExisting();
     const text = await container.getText();
@@ -51,5 +82,12 @@ Then('the cart badge should show {string}', async (count: string) => {
     const expected = parseInt(count, 10);
     if (actual !== expected) {
         throw new Error(`Expected cart badge ${expected} but found ${actual}`);
+    }
+});
+
+Then('I should see the confirmation message {string}', async (expectedMessage: string) => {
+    const actual = await CheckoutPage.getConfirmationText();
+    if (!actual.includes(expectedMessage)) {
+        throw new Error(`Expected confirmation message to include '${expectedMessage}' but got '${actual}'`);
     }
 });

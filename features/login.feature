@@ -14,4 +14,6 @@ Feature: Saucedemo login
       | performance_glitch_user   | secret_sauce   | Products |
       | error_user                | secret_sauce   | Products |
       | visual_user               | secret_sauce   | Products |
-
+      | some_user                 | some_sauce     | Epic sadface: Username and password do not match any user in this service |
+      |                           | secret_sauce   | Epic sadface: Username is required |
+      | visual_user               |                | Epic sadface: Password is required |
